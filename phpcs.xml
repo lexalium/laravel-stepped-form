@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<ruleset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/squizlabs/php_codesniffer/phpcs.xsd">
+
+    <description>The coding standard for Stepped Form.</description>
+
+    <arg name="basepath" value="."/>
+    <arg name="cache" value=".phpcs-cache"/>
+    <arg name="colors"/>
+    <arg name="extensions" value="php"/>
+
+    <file>src/</file>
+    <file>tests/</file>
+
+    <rule ref="PSR12">
+        <exclude name="PSR1.Files.SideEffects.FoundWithSymbols"/>
+    </rule>
+
+    <rule ref="Generic.Files.ByteOrderMark"/>
+    <rule ref="WebimpressCodingStandard.PHP.ImportInternalFunction"/>
+
+    <!-- Ban some functions -->
+    <rule ref="Generic.PHP.ForbiddenFunctions">
+        <properties>
+            <property name="forbiddenFunctions" type="array">
+                <element key="var_dump" value="Xdebug"/>
+                <element key="print_r" value="Xdebug"/>
+                <element key="xdebug_break" value="Xdebug"/>
+                <element key="xdebug_call_class" value="Xdebug"/>
+                <element key="xdebug_call_function" value="Xdebug"/>
+                <element key="xdebug_call_file" value="Xdebug"/>
+                <element key="xdebug_call_line" value="Xdebug"/>
+                <element key="xdebug_code_coverage_started" value="Xdebug"/>
+                <element key="xdebug_dump_superglobals" value="Xdebug"/>
+                <element key="ini_set" value="Xdebug"/>
+                <element key="error_reporting" value="Xdebug"/>
+                <element key="exec" value="Xdebug"/>
+                <element key="passthru" value="Xdebug"/>
+                <element key="system" value="Xdebug"/>
+                <element key="shell_exec" value="Xdebug"/>
+                <element key="popen" value="Xdebug"/>
+                <element key="proc_open" value="Xdebug"/>
+                <element key="pcntl_exec" value="Xdebug"/>
+            </property>
+        </properties>
+    </rule>
+</ruleset>
