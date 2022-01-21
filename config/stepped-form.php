@@ -4,6 +4,7 @@ use Lexal\HttpSteppedForm\ExceptionNormalizer\Normalizers\AlreadyStartedExceptio
 use Lexal\HttpSteppedForm\ExceptionNormalizer\Normalizers\DefaultExceptionNormalizer;
 use Lexal\HttpSteppedForm\ExceptionNormalizer\Normalizers\EntityNotFoundExceptionNormalizer;
 use Lexal\HttpSteppedForm\ExceptionNormalizer\Normalizers\FormIsNotStartedExceptionNormalizer;
+use Lexal\HttpSteppedForm\ExceptionNormalizer\Normalizers\StepIsNotSubmittedExceptionNormalizer;
 use Lexal\HttpSteppedForm\ExceptionNormalizer\Normalizers\StepNotFoundExceptionNormalizer;
 use Lexal\HttpSteppedForm\ExceptionNormalizer\Normalizers\StepNotRenderableExceptionNormalizer;
 use Lexal\HttpSteppedForm\ExceptionNormalizer\Normalizers\SteppedFormErrorsExceptionNormalizer;
@@ -40,6 +41,7 @@ return [
         AlreadyStartedExceptionNormalizer::class,
         StepNotFoundExceptionNormalizer::class,
         StepNotRenderableExceptionNormalizer::class,
+        StepIsNotSubmittedExceptionNormalizer::class,
         EntityNotFoundExceptionNormalizer::class,
         FormIsNotStartedExceptionNormalizer::class,
         SteppedFormErrorsExceptionNormalizer::class,
