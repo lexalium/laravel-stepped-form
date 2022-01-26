@@ -25,6 +25,8 @@ use Lexal\SteppedForm\Data\FormDataStorageInterface;
 use Lexal\SteppedForm\Data\StepControl;
 use Lexal\SteppedForm\Data\StepControlInterface;
 use Lexal\SteppedForm\Data\Storage\StorageInterface;
+use Lexal\SteppedForm\EntityCopy\EntityCopyInterface;
+use Lexal\SteppedForm\EntityCopy\SimpleEntityCopy;
 use Lexal\SteppedForm\EventDispatcher\Event\BeforeHandleStep;
 use Lexal\SteppedForm\EventDispatcher\EventDispatcherInterface;
 use Lexal\SteppedForm\State\FormState;
@@ -85,6 +87,7 @@ class ServiceProvider extends LaravelServiceProvider
         $this->registerStepsBuilder();
         $this->registerEventDispatcher();
         $this->registerValidator();
+        $this->registerEntityCopy();
     }
 
     private function registerExceptionNormalizer(): void
@@ -141,6 +144,11 @@ class ServiceProvider extends LaravelServiceProvider
     private function registerValidator(): void
     {
         $this->app->singleton(ValidatorInterface::class, Validator::class);
+    }
+
+    private function registerEntityCopy(): void
+    {
+        $this->app->singleton(EntityCopyInterface::class, SimpleEntityCopy::class);
     }
 
     /**
