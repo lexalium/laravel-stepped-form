@@ -18,6 +18,8 @@ use Lexal\LaravelSteppedForm\Event\Dispatcher\EventDispatcher;
 use Lexal\LaravelSteppedForm\Event\Listener\BeforeHandleStepListener;
 use Lexal\LaravelSteppedForm\Renderer\Renderer;
 use Lexal\LaravelSteppedForm\Routing\Redirector;
+use Lexal\LaravelSteppedForm\Validator\Validator;
+use Lexal\LaravelSteppedForm\Validator\ValidatorInterface;
 use Lexal\SteppedForm\Data\FormDataStorage;
 use Lexal\SteppedForm\Data\FormDataStorageInterface;
 use Lexal\SteppedForm\Data\StepControl;
@@ -82,6 +84,7 @@ class ServiceProvider extends LaravelServiceProvider
         $this->registerFormState();
         $this->registerStepsBuilder();
         $this->registerEventDispatcher();
+        $this->registerValidator();
     }
 
     private function registerExceptionNormalizer(): void
@@ -133,6 +136,11 @@ class ServiceProvider extends LaravelServiceProvider
         if ($this->app->bound(Dispatcher::class)) {
             $this->app->singleton(EventDispatcherInterface::class, EventDispatcher::class);
         }
+    }
+
+    private function registerValidator(): void
+    {
+        $this->app->singleton(ValidatorInterface::class, Validator::class);
     }
 
     /**

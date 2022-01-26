@@ -7,8 +7,11 @@ namespace Lexal\LaravelSteppedForm\Tests\Event\Listener;
 use Illuminate\Contracts\Validation\Factory;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Support\MessageBag;
+use Lexal\LaravelSteppedForm\Entity\RulesDefinition;
 use Lexal\LaravelSteppedForm\Event\Listener\BeforeHandleStepListener;
 use Lexal\LaravelSteppedForm\Steps\ValidateStepInterface;
+use Lexal\LaravelSteppedForm\Validator\Exception\ValidatorException;
+use Lexal\LaravelSteppedForm\Validator\ValidatorInterface;
 use Lexal\SteppedForm\EventDispatcher\Event\BeforeHandleStep;
 use Lexal\SteppedForm\Exception\EventDispatcherException;
 use Lexal\SteppedForm\Steps\Collection\Step;
@@ -18,27 +21,21 @@ use PHPUnit\Framework\TestCase;
 
 class BeforeHandleStepListenerTest extends TestCase
 {
-    private MockObject $validationFactory;
+    private MockObject $validator;
     private BeforeHandleStepListener $listener;
 
     public function testHandle(): void
     {
-        $validator = $this->createMock(Validator::class);
-
-        $validator->expects($this->once())
-            ->method('fails')
-            ->willReturn(false);
-
-        $this->validationFactory->expects($this->once())
-            ->method('make')
-            ->with(['data' => 'test'], ['data' => 'required'])
-            ->willReturn($validator);
+        $this->validator->expects($this->once())
+            ->method('validate')
+            ->with(['data' => 'test'], new RulesDefinition(['data' => 'required'], ['data' => 'test message']));
 
         $step = $this->createMock(ValidatableStepInterface::class);
 
         $step->expects($this->once())
-            ->method('getRules')
-            ->willReturn(['data' => 'required']);
+            ->method('getRulesDefinition')
+            ->with(['entity'])
+            ->willReturn(new RulesDefinition(['data' => 'required'], ['data' => 'test message']));
 
         $event = new BeforeHandleStep(['data' => 'test'], ['entity'], new Step('key', $step));
 
@@ -47,29 +44,19 @@ class BeforeHandleStepListenerTest extends TestCase
 
     public function testHandleWithErrors(): void
     {
-        /** @phpstan-ignore-next-line */
-        $this->expectExceptionObject(new EventDispatcherException(['data' => ['required message']]));
+        $this->expectExceptionObject(new ValidatorException(['data' => 'required message']));
 
-        $validator = $this->createMock(Validator::class);
-
-        $validator->expects($this->once())
-            ->method('fails')
-            ->willReturn(true);
-
-        $validator->expects($this->once())
-            ->method('errors')
-            ->willReturn(new MessageBag(['data' => 'required message']));
-
-        $this->validationFactory->expects($this->once())
-            ->method('make')
-            ->with(['data' => 'test'], ['data' => 'required'])
-            ->willReturn($validator);
+        $this->validator->expects($this->once())
+            ->method('validate')
+            ->with(['data' => 'test'], new RulesDefinition(['data' => 'required']))
+            ->willThrowException(new ValidatorException(['data' => 'required message']));
 
         $step = $this->createMock(ValidatableStepInterface::class);
 
         $step->expects($this->once())
-            ->method('getRules')
-            ->willReturn(['data' => 'required']);
+            ->method('getRulesDefinition')
+            ->with(['entity'])
+            ->willReturn(new RulesDefinition(['data' => 'required']));
 
         $event = new BeforeHandleStep(['data' => 'test'], ['entity'], new Step('key', $step));
 
@@ -78,13 +65,13 @@ class BeforeHandleStepListenerTest extends TestCase
 
     public function testHandleDataIsNorArray(): void
     {
-        $this->validationFactory->expects($this->never())
-            ->method('make');
+        $this->validator->expects($this->never())
+            ->method('validate');
 
         $step = $this->createMock(ValidatableStepInterface::class);
 
         $step->expects($this->never())
-            ->method('getRules');
+            ->method('getRulesDefinition');
 
         $event = new BeforeHandleStep('data', ['entity'], new Step('key', $step));
 
@@ -93,8 +80,8 @@ class BeforeHandleStepListenerTest extends TestCase
 
     public function testHandleStepIsNotValidatable(): void
     {
-        $this->validationFactory->expects($this->never())
-            ->method('make');
+        $this->validator->expects($this->never())
+            ->method('validate');
 
         $step = $this->createMock(StepInterface::class);
 
@@ -105,9 +92,9 @@ class BeforeHandleStepListenerTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->validationFactory = $this->createMock(Factory::class);
+        $this->validator = $this->createMock(ValidatorInterface::class);
 
-        $this->listener = new BeforeHandleStepListener($this->validationFactory);
+        $this->listener = new BeforeHandleStepListener($this->validator);
 
         parent::setUp();
     }
