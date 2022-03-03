@@ -7,7 +7,6 @@ namespace Lexal\LaravelSteppedForm\ServiceProvider;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Contracts\Events\Dispatcher;
-use Illuminate\Contracts\Validation\Factory as ValidationFactory;
 use Illuminate\Contracts\View\Factory as ViewFactory;
 use Illuminate\Support\ServiceProvider as LaravelServiceProvider;
 use Lexal\HttpSteppedForm\ExceptionNormalizer\ExceptionNormalizer;
@@ -15,11 +14,8 @@ use Lexal\HttpSteppedForm\ExceptionNormalizer\ExceptionNormalizerInterface;
 use Lexal\HttpSteppedForm\Renderer\RendererInterface;
 use Lexal\HttpSteppedForm\Routing\RedirectorInterface;
 use Lexal\LaravelSteppedForm\Event\Dispatcher\EventDispatcher;
-use Lexal\LaravelSteppedForm\Event\Listener\BeforeHandleStepListener;
 use Lexal\LaravelSteppedForm\Renderer\Renderer;
 use Lexal\LaravelSteppedForm\Routing\Redirector;
-use Lexal\LaravelSteppedForm\Validator\Validator;
-use Lexal\LaravelSteppedForm\Validator\ValidatorInterface;
 use Lexal\SteppedForm\Data\FormDataStorage;
 use Lexal\SteppedForm\Data\FormDataStorageInterface;
 use Lexal\SteppedForm\Data\StepControl;
@@ -27,7 +23,6 @@ use Lexal\SteppedForm\Data\StepControlInterface;
 use Lexal\SteppedForm\Data\Storage\StorageInterface;
 use Lexal\SteppedForm\EntityCopy\EntityCopyInterface;
 use Lexal\SteppedForm\EntityCopy\SimpleEntityCopy;
-use Lexal\SteppedForm\EventDispatcher\Event\BeforeHandleStep;
 use Lexal\SteppedForm\EventDispatcher\EventDispatcherInterface;
 use Lexal\SteppedForm\State\FormState;
 use Lexal\SteppedForm\State\FormStateInterface;
@@ -46,10 +41,6 @@ class ServiceProvider extends LaravelServiceProvider
 {
     private const CONFIG_FILENAME = 'stepped-form.php';
 
-    /**
-     * @throws ContainerExceptionInterface
-     * @throws NotFoundExceptionInterface
-     */
     public function boot(): void
     {
         $path = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . self::CONFIG_FILENAME;
@@ -59,13 +50,6 @@ class ServiceProvider extends LaravelServiceProvider
         ]);
 
         $this->mergeConfigFrom($path, 'stepped-form');
-
-        if ($this->app->bound(Dispatcher::class) && $this->app->bound(ValidationFactory::class)) {
-            /** @var Dispatcher $dispatcher */
-            $dispatcher = $this->app->get(Dispatcher::class);
-
-            $dispatcher->listen(BeforeHandleStep::class, [BeforeHandleStepListener::class, 'handle']);
-        }
     }
 
     public function register(): void
@@ -86,7 +70,6 @@ class ServiceProvider extends LaravelServiceProvider
         $this->registerFormState();
         $this->registerStepsBuilder();
         $this->registerEventDispatcher();
-        $this->registerValidator();
         $this->registerEntityCopy();
     }
 
@@ -139,11 +122,6 @@ class ServiceProvider extends LaravelServiceProvider
         if ($this->app->bound(Dispatcher::class)) {
             $this->app->singleton(EventDispatcherInterface::class, EventDispatcher::class);
         }
-    }
-
-    private function registerValidator(): void
-    {
-        $this->app->singleton(ValidatorInterface::class, Validator::class);
     }
 
     private function registerEntityCopy(): void

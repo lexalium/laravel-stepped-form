@@ -30,7 +30,6 @@
     },
     "suggest": {
         "illuminate/events": "Required to use Laravel Dispatcher as form Event Dispatcher (^8.0).",
-        "illuminate/validation": "Required to use step data validation on Before Handle Step event (^8.0).",
         "illuminate/view": "Required to render Laravel views (^8.0).",
         "illuminate/session": "Required to use Laravel Session as Stepped Form storage (^8.0).",
         "illuminate/config": "Required to use Laravel config (^8.0)."
