@@ -6,9 +6,9 @@ and built for the Laravel & Lumen framework.
 
 ## Requirements
 
-**PHP:** ^8.0
+**PHP:** ^8.2
 
-**Laravel:** ^8.0
+**Laravel:** ^10.0
 
 ## Resources
 
