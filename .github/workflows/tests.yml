@@ -1,0 +1,79 @@
+name: "PHPUnit, PHPCS, PHPStan Tests"
+
+on:
+  push:
+    paths-ignore:
+      - 'docs/**'
+  pull_request:
+    paths-ignore:
+      - 'docs/**'
+
+jobs:
+  phpunit:
+    name: "PHPUnit tests"
+
+    runs-on: "ubuntu-latest"
+
+    strategy:
+      matrix:
+        php-version:
+          - "8.0"
+          - "8.1"
+          - "8.2"
+
+    steps:
+      - name: "Checkout repository"
+        uses: "actions/checkout@v3"
+
+      - name: "Setup Job with PHP version ${{ matrix.php-version }}"
+        uses: "./.github/actions"
+        with:
+          php-version: "${{ matrix.php-version }}"
+
+      - name: "Test with lowest dependencies"
+        run: |
+          composer update --prefer-lowest --no-interaction --no-progress
+          vendor/bin/phpunit tests/
+
+      - name: "Test with highest dependencies"
+        run: |
+          composer update --no-interaction --no-progress
+          vendor/bin/phpunit tests/
+
+  phpstan:
+    name: "PHPStan static code analysis"
+
+    runs-on: "ubuntu-latest"
+
+    steps:
+      - name: "Checkout repository"
+        uses: "actions/checkout@v3"
+
+      - name: "Setup Job with PHP version 8.1"
+        uses: "./.github/actions"
+        with:
+          php-version: "8.1"
+
+      - name: "Static code analysis"
+        run: |
+          composer install --no-interaction --no-progress
+          vendor/bin/phpstan analyse --error-format=checkstyle | cs2pr
+
+  phpcs:
+    name: "PHP Code Sniffer static code analysis"
+
+    runs-on: "ubuntu-latest"
+
+    steps:
+      - name: "Checkout repository"
+        uses: "actions/checkout@v3"
+
+      - name: "Setup Job with PHP version 8.1"
+        uses: "./.github/actions"
+        with:
+          php-version: "8.1"
+
+      - name: "Static code analysis"
+        run: |
+          composer install --no-interaction --no-progress
+          vendor/bin/phpcs -q --report=checkstyle src | cs2pr

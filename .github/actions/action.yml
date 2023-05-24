@@ -1,0 +1,28 @@
+name: 'Setup job'
+
+description: 'Setup workflow job'
+
+inputs:
+  php-version:
+    description: 'PHP version'
+    required: true
+    default: '8.1'
+
+runs:
+  using: "composite"
+  steps:
+    - name: "Install PHP"
+      uses: "shivammathur/setup-php@v2"
+      with:
+        coverage: "pcov"
+        php-version: "${{ inputs.php-version }}"
+        tools: composer:v2, cs2pr
+
+    - name: "Cache dependencies"
+      uses: "actions/cache@v3"
+      with:
+        path: |
+          ~/.composer/cache
+          vendor
+        key: "php-${{ inputs.php-version }}"
+        restore-keys: "php-${{ inputs.php-version }}"
