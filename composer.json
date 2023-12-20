@@ -11,28 +11,31 @@
     "keywords": [
         "laravel",
         "lumen",
-        "stepped-form"
+        "stepped-form",
+        "dynamic stepped-form",
+        "multi-step form",
+        "multi-step"
     ],
     "require": {
-        "php": "^8.0",
-        "illuminate/contracts": "^8.0 || ^9.0 || ^10.0",
-        "illuminate/routing": "^8.0 || ^9.0 || ^10.0",
-        "illuminate/support": "^8.0 || ^9.0 || ^10.0",
-        "lexal/http-stepped-form": "^1.0"
+        "php": ">=8.1",
+        "illuminate/contracts": "^9.0 || ^10.0",
+        "illuminate/routing": "^9.0 || ^10.0",
+        "illuminate/support": "^9.0 || ^10.0",
+        "lexal/http-stepped-form": "^2.0"
     },
     "require-dev": {
-        "dealerdirect/phpcodesniffer-composer-installer": "^0.7.1",
-        "illuminate/http": "^8.0 || ^9.0 || ^10.0",
-        "phpstan/phpstan": "^1.2",
-        "phpunit/phpunit": "^9.5",
+        "dealerdirect/phpcodesniffer-composer-installer": "^1.0.0",
+        "illuminate/http": "^9.0 || ^10.0",
+        "phpstan/phpstan": "^1.10",
+        "phpunit/phpunit": "^10.5",
         "roave/security-advisories": "dev-latest",
-        "webimpress/coding-standard": "^1.2"
+        "webimpress/coding-standard": "^1.3"
     },
     "suggest": {
-        "illuminate/events": "Required to use Laravel Dispatcher as form Event Dispatcher (^8.0 || ^9.0 || ^10.0).",
-        "illuminate/view": "Required to render Laravel views (^8.0 || ^9.0 || ^10.0).",
-        "illuminate/session": "Required to use Laravel Session as Stepped Form storage (^8.0 || ^9.0 || ^10.0).",
-        "illuminate/config": "Required to use Laravel config (^8.0 || ^9.0 || ^10.0)."
+        "illuminate/events": "Required to use Laravel Dispatcher as form Event Dispatcher (^9.0 || ^10.0).",
+        "illuminate/view": "Required to render Laravel views (^9.0 || ^10.0).",
+        "illuminate/session": "Required to use Laravel Session as Stepped Form storage (^9.0 || ^10.0).",
+        "illuminate/config": "Required to use Laravel config (^9.0 || ^10.0)."
     },
     "autoload": {
         "psr-4": {

@@ -5,32 +5,12 @@ declare(strict_types=1);
 namespace Lexal\LaravelSteppedForm\Storage;
 
 use Illuminate\Contracts\Session\Session;
-use Lexal\SteppedForm\Data\Storage\StorageInterface;
+use Lexal\SteppedForm\Form\Storage\StorageInterface;
 
-use function array_keys;
-use function array_map;
-
-class SessionStorage implements StorageInterface
+final class SessionStorage implements StorageInterface
 {
-    public function __construct(private string $namespace, private Session $session)
+    public function __construct(private readonly Session $session, private readonly string $namespace)
     {
-    }
-
-    public function put(string $key, mixed $data): StorageInterface
-    {
-        $this->session->put($this->getStorageKey($key), $data);
-
-        return $this;
-    }
-
-    public function get(string $key, mixed $default = null): mixed
-    {
-        return $this->session->get($this->getStorageKey($key), $default);
-    }
-
-    public function keys(): array
-    {
-        return array_map('strval', array_keys($this->session->get($this->namespace, [])));
     }
 
     public function has(string $key): bool
@@ -38,18 +18,19 @@ class SessionStorage implements StorageInterface
         return $this->session->has($this->getStorageKey($key));
     }
 
-    public function forget(string $key): StorageInterface
+    public function get(string $key, mixed $default = null): mixed
     {
-        $this->session->forget($this->getStorageKey($key));
-
-        return $this;
+        return $this->session->get($this->getStorageKey($key), $default);
     }
 
-    public function clear(): StorageInterface
+    public function put(string $key, mixed $data): void
+    {
+        $this->session->put($this->getStorageKey($key), $data);
+    }
+
+    public function clear(): void
     {
         $this->session->forget($this->namespace);
-
-        return $this;
     }
 
     private function getStorageKey(string $key): string

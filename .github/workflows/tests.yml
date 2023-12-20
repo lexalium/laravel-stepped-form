@@ -17,9 +17,9 @@ jobs:
     strategy:
       matrix:
         php-version:
-          - "8.0"
           - "8.1"
           - "8.2"
+          - "8.3"
 
     steps:
       - name: "Checkout repository"
@@ -49,10 +49,10 @@ jobs:
       - name: "Checkout repository"
         uses: "actions/checkout@v3"
 
-      - name: "Setup Job with PHP version 8.1"
+      - name: "Setup Job with PHP version 8.2"
         uses: "./.github/actions"
         with:
-          php-version: "8.1"
+          php-version: "8.2"
 
       - name: "Static code analysis"
         run: |
@@ -68,10 +68,10 @@ jobs:
       - name: "Checkout repository"
         uses: "actions/checkout@v3"
 
-      - name: "Setup Job with PHP version 8.1"
+      - name: "Setup Job with PHP version 8.2"
         uses: "./.github/actions"
         with:
-          php-version: "8.1"
+          php-version: "8.2"
 
       - name: "Static code analysis"
         run: |
