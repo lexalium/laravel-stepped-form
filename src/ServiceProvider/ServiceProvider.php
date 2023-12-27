@@ -168,7 +168,7 @@ final class ServiceProvider extends LaravelServiceProvider
      */
     private function checkIfClassImplements(string $key, string $interface, string|object $class): void
     {
-        if (!in_array($interface, (array)class_implements($class, false), true)) {
+        if (!in_array($interface, (array)class_implements($class), true)) {
             throw new BindingResolutionException(
                 sprintf(
                     'Cannot use %s class as Form Settings for the [%s] form. Class must implement %s interface.',
@@ -378,7 +378,7 @@ final class ServiceProvider extends LaravelServiceProvider
     {
         $class = $this->getConfig($configKey, $default);
 
-        if (!in_array($abstract, (array)class_implements($class, false), true)) {
+        if (!in_array($abstract, (array)class_implements($class), true)) {
             throw new BindingResolutionException(
                 sprintf(
                     'Unable to register service. Class %s must implement %s interface.',
