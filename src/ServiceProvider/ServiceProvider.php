@@ -206,17 +206,18 @@ final class ServiceProvider extends LaravelServiceProvider
      */
     private function createForm(string $key, array $formDefinition): HttpSteppedForm
     {
+        $parameters = ['namespace' => $key];
+
         $sessionStorage = $this->createFormStorage(
-            $key,
             $formDefinition['session_storage'],
             SessionStorageInterface::class,
+            $parameters,
         );
 
         $storage = $this->createFormStorage(
-            $key,
             $formDefinition['storage'],
             StorageInterface::class,
-            compact('sessionStorage'),
+            $parameters + compact('sessionStorage'),
         );
 
         $dataControl = new DataControl(new DataStorage($storage));
@@ -229,6 +230,7 @@ final class ServiceProvider extends LaravelServiceProvider
             $this->createFormBuilder($formDefinition, $dataControl, $stepControl),
             $this->app->make(EventDispatcherInterface::class),
             $this->app->make(EntityCopyInterface::class),
+            $sessionStorage,
         );
 
         return new HttpSteppedForm(
@@ -304,12 +306,8 @@ final class ServiceProvider extends LaravelServiceProvider
      *
      * @throws BindingResolutionException
      */
-    private function createFormStorage(
-        string $key,
-        string|object|array $definition,
-        string $interface,
-        array $parameters = [],
-    ): mixed {
+    private function createFormStorage(string|object|array $definition, string $interface, array $parameters): mixed
+    {
         $class = $storage = $definition;
 
         if (is_array($storage)) {
@@ -317,12 +315,11 @@ final class ServiceProvider extends LaravelServiceProvider
             $parameters += $storage['parameters'] ?? [];
         }
 
-        if ($class === SessionStorage::class || $class === SessionSessionKeyStorage::class) {
-            if (!$this->app->bound(Session::class)) {
-                $this->missingRequiredPackage('storage', $interface, 'illuminate/session');
-            }
-
-            $parameters += ['namespace' => $key];
+        if (
+            ($class === SessionStorage::class || $class === SessionSessionKeyStorage::class)
+            && !$this->app->bound(Session::class)
+        ) {
+            $this->missingRequiredPackage('storage', $interface, 'illuminate/session');
         }
 
         return $this->getInstance($class, $parameters);
