@@ -6,6 +6,7 @@ namespace Lexal\LaravelSteppedForm\Tests\Storage;
 
 use Illuminate\Contracts\Session\Session;
 use Lexal\LaravelSteppedForm\Storage\SessionStorage;
+use Lexal\SteppedForm\Form\Storage\SessionStorageInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -17,8 +18,12 @@ final class SessionStorageTest extends TestCase
     protected function setUp(): void
     {
         $this->session = $this->createMock(Session::class);
+        $sessionStorage = $this->createStub(SessionStorageInterface::class);
 
-        $this->storage = new SessionStorage($this->session, 'form');
+        $sessionStorage->method('getCurrent')
+            ->willReturn('main');
+
+        $this->storage = new SessionStorage($this->session, $sessionStorage, 'form');
     }
 
     public function testHas(): void
@@ -29,8 +34,8 @@ final class SessionStorageTest extends TestCase
             ->method('has')
             ->willReturnCallback(static function (mixed $value) use ($matcher) {
                 match ($matcher->numberOfInvocations()) {
-                    1 => self::assertEquals('form.key', $value),
-                    2 => self::assertEquals('form.key2', $value),
+                    1 => self::assertEquals('form.main.key', $value),
+                    2 => self::assertEquals('form.main.key2', $value),
                     default => true,
                 };
 
@@ -47,7 +52,7 @@ final class SessionStorageTest extends TestCase
     {
         $this->session->expects($this->once())
             ->method('get')
-            ->with('form.key', ['default'])
+            ->with('form.main.key', ['default'])
             ->willReturn(['data' => 'test']);
 
         $this->assertEquals(['data' => 'test'], $this->storage->get('key', ['default']));
@@ -57,7 +62,7 @@ final class SessionStorageTest extends TestCase
     {
         $this->session->expects($this->once())
             ->method('put')
-            ->with('form.key', ['data' => 'test']);
+            ->with('form.main.key', ['data' => 'test']);
 
         $this->storage->put('key', ['data' => 'test']);
     }
@@ -66,7 +71,7 @@ final class SessionStorageTest extends TestCase
     {
         $this->session->expects($this->once())
             ->method('forget')
-            ->with('form');
+            ->with('form.main');
 
         $this->storage->clear();
     }

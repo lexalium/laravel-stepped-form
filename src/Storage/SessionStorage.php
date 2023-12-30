@@ -50,9 +50,16 @@ final class SessionStorage implements StorageInterface
         $this->session->put($this->getStorageKey($key), $data);
     }
 
+    /**
+     * @inheritDoc
+     *
+     * @throws ReadSessionKeyException
+     */
     public function clear(): void
     {
-        $this->session->forget($this->namespace);
+        $sessionKey = $this->sessionStorage->getCurrent();
+
+        $this->session->forget(sprintf("%s.%s", $this->namespace, $sessionKey));
     }
 
     /**
