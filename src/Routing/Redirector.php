@@ -8,9 +8,9 @@ use Illuminate\Routing\Redirector as LaravelRedirector;
 use Lexal\HttpSteppedForm\Routing\RedirectorInterface;
 use Symfony\Component\HttpFoundation\Response;
 
-class Redirector implements RedirectorInterface
+final class Redirector implements RedirectorInterface
 {
-    public function __construct(private LaravelRedirector $redirector)
+    public function __construct(private readonly LaravelRedirector $redirector)
     {
     }
 

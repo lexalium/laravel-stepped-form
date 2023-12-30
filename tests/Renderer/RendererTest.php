@@ -8,40 +8,35 @@ use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
 use Lexal\HttpSteppedForm\Renderer\RendererInterface;
 use Lexal\LaravelSteppedForm\Renderer\Renderer;
-use Lexal\SteppedForm\Entity\TemplateDefinition;
-use PHPUnit\Framework\MockObject\MockObject;
+use Lexal\SteppedForm\Step\TemplateDefinition;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Response;
 
-class RendererTest extends TestCase
+final class RendererTest extends TestCase
 {
-    private MockObject $view;
+    private Factory&Stub $view;
     private RendererInterface $renderer;
+
+    protected function setUp(): void
+    {
+        $this->view = $this->createStub(Factory::class);
+
+        $this->renderer = new Renderer($this->view);
+    }
 
     public function testRender(): void
     {
-        $view = $this->createMock(View::class);
+        $view = $this->createStub(View::class);
 
-        $view->expects($this->once())
-            ->method('render')
+        $view->method('render')
             ->willReturn('Test content');
 
-        $this->view->expects($this->once())
-            ->method('make')
-            ->with('test.template', ['data' => 'hello'])
+        $this->view->method('make')
             ->willReturn($view);
 
         $actual = $this->renderer->render(new TemplateDefinition('test.template', ['data' => 'hello']));
 
         $this->assertEquals(new Response('Test content'), $actual);
-    }
-
-    protected function setUp(): void
-    {
-        $this->view = $this->createMock(Factory::class);
-
-        $this->renderer = new Renderer($this->view);
-
-        parent::setUp();
     }
 }

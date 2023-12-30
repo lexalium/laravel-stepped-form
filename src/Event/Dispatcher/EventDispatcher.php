@@ -7,9 +7,9 @@ namespace Lexal\LaravelSteppedForm\Event\Dispatcher;
 use Illuminate\Contracts\Events\Dispatcher;
 use Lexal\SteppedForm\EventDispatcher\EventDispatcherInterface;
 
-class EventDispatcher implements EventDispatcherInterface
+final class EventDispatcher implements EventDispatcherInterface
 {
-    public function __construct(private Dispatcher $dispatcher)
+    public function __construct(private readonly Dispatcher $dispatcher)
     {
     }
 
