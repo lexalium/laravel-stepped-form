@@ -169,7 +169,7 @@ The configuration file `config/stepped-form.php` has the following options:
        // POST /customers
        public function start(): Response
        {
-           return $this->form->start(new Customer());
+           return $this->form->start(new Customer(), /* nothing or customer id to split different sessions */);
        }
 
        // GET /customers/step/{step-key}
