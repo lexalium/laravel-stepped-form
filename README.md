@@ -119,6 +119,7 @@ The configuration file `config/stepped-form.php` has the following options:
                 ],
                 'settings_class' => FormSettings::class,
                 'storage' => SessionStorage::class,
+                'session_storage' => SessionSessionKeyStorage::class,
             ],
         ],
  
@@ -135,6 +136,7 @@ The configuration file `config/stepped-form.php` has the following options:
                 'builder_class' => CustomBuilder::class,
                 'settings_class' => FormSettings::class,
                 'storage' => SessionStorage::class,
+                'session_storage' => SessionSessionKeyStorage::class,
             ],
         ],
  

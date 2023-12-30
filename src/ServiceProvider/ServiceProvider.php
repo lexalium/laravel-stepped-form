@@ -6,12 +6,14 @@ namespace Lexal\LaravelSteppedForm\ServiceProvider;
 
 use Illuminate\Contracts\Session\Session;
 use Lexal\HttpSteppedForm\SteppedForm as HttpSteppedForm;
+use Lexal\LaravelSteppedForm\Storage\SessionSessionKeyStorage;
 use Lexal\LaravelSteppedForm\Storage\SessionStorage;
 use Lexal\SteppedForm\Form\Builder\FormBuilderInterface;
 use Lexal\SteppedForm\Form\Builder\StaticStepsFormBuilder;
 use Lexal\SteppedForm\Form\DataControl;
 use Lexal\SteppedForm\Form\StepControl;
 use Lexal\SteppedForm\Form\Storage\DataStorage;
+use Lexal\SteppedForm\Form\Storage\SessionStorageInterface;
 use Lexal\SteppedForm\Form\Storage\StorageInterface;
 use Lexal\SteppedForm\Step\Builder\StepsBuilder;
 use Lexal\SteppedForm\Step\Builder\StepsBuilderInterface;
@@ -38,6 +40,7 @@ use Psr\Container\ContainerExceptionInterface;
 
 use function array_map;
 use function class_implements;
+use function compact;
 use function dirname;
 use function get_class;
 use function get_debug_type;
@@ -113,6 +116,7 @@ final class ServiceProvider extends LaravelServiceProvider
      *     steps?: array<string, string|StepInterface>,
      *     settings_class?: string|FormSettingsInterface,
      *     storage?: string|object|array{ class?: string|object, parameters?: array<string, mixed> },
+     *     session_storage?: string|object|array{ class?: string|object, parameters?: array<string, mixed> },
      *     } $formDefinition
      *
      * @throws BindingResolutionException
@@ -123,10 +127,11 @@ final class ServiceProvider extends LaravelServiceProvider
             throw new BindingResolutionException('Form key must have only "A-z", "0-9" and "-".');
         }
 
-        if (!isset($formDefinition['settings_class'], $formDefinition['storage'])) {
+        if (!isset($formDefinition['settings_class'], $formDefinition['storage'], $formDefinition['session_storage'])) {
             throw new BindingResolutionException(
                 sprintf(
-                    'Form Definition [%s] must have the following required options: settings_class, storage.',
+                    'Form Definition [%s] must have the following required options: '
+                    . 'settings_class, storage, session_storage.',
                     $key,
                 ),
             );
@@ -149,18 +154,26 @@ final class ServiceProvider extends LaravelServiceProvider
 
         $this->checkIfClassImplements($key, FormSettingsInterface::class, $formDefinition['settings_class']);
 
-        /** @var string|object $storageClass */
-        $storageClass = $formDefinition['storage'];
+        $this->validateStorage($key, $formDefinition['storage'], StorageInterface::class);
+        $this->validateStorage($key, $formDefinition['session_storage'], SessionStorageInterface::class);
+    }
 
-        if (is_array($formDefinition['storage'])) {
-            if (!isset($formDefinition['storage']['class'])) {
+    /**
+     * @param string|object|array{ class?: string|object, parameters?: array<string, mixed> } $storageClass
+     *
+     * @throws BindingResolutionException
+     */
+    private function validateStorage(string $key, string|object|array $storageClass, string $interface): void
+    {
+        if (is_array($storageClass)) {
+            if (!isset($storageClass['class'])) {
                 throw new BindingResolutionException('"class" option for the storage is required.');
             }
 
-            $storageClass = $formDefinition['storage']['class'];
+            $storageClass = $storageClass['class'];
         }
 
-        $this->checkIfClassImplements($key, StorageInterface::class, $storageClass);
+        $this->checkIfClassImplements($key, $interface, $storageClass);
     }
 
     /**
@@ -186,13 +199,26 @@ final class ServiceProvider extends LaravelServiceProvider
      *     steps?: array<string, string|StepInterface>,
      *     settings_class: string|FormSettingsInterface,
      *     storage: string|object|array{ class: string|object, parameters?: array<string, mixed> },
+     *     session_storage: string|object|array{ class: string|object, parameters?: array<string, mixed> },
      * } $formDefinition
      *
      * @throws BindingResolutionException
      */
     private function createForm(string $key, array $formDefinition): HttpSteppedForm
     {
-        $storage = $this->createFormStorage($key, $formDefinition);
+        $sessionStorage = $this->createFormStorage(
+            $key,
+            $formDefinition['session_storage'],
+            SessionStorageInterface::class,
+        );
+
+        $storage = $this->createFormStorage(
+            $key,
+            $formDefinition['storage'],
+            StorageInterface::class,
+            compact('sessionStorage'),
+        );
+
         $dataControl = new DataControl(new DataStorage($storage));
         $stepControl = new StepControl($storage);
 
@@ -268,30 +294,35 @@ final class ServiceProvider extends LaravelServiceProvider
     }
 
     /**
-     * @param array{
-     *     storage: string|object|array{ class: string|object, parameters?: array<string, mixed> },
-     * } $formDefinition
+     * @template TStorage
+     *
+     * @param string|object|array{ class: string|object, parameters?: array<string, mixed> } $definition
+     * @param class-string<TStorage> $interface
+     * @param array<string, mixed> $parameters
+     *
+     * @return TStorage
      *
      * @throws BindingResolutionException
      */
-    private function createFormStorage(string $key, array $formDefinition): StorageInterface
-    {
-        $storage = $formDefinition['storage'];
-
-        $class = $formDefinition['storage'];
-        $parameters = [];
+    private function createFormStorage(
+        string $key,
+        string|object|array $definition,
+        string $interface,
+        array $parameters = [],
+    ): mixed {
+        $class = $storage = $definition;
 
         if (is_array($storage)) {
             $class = $storage['class'];
-            $parameters = $storage['parameters'] ?? [];
+            $parameters += $storage['parameters'] ?? [];
         }
 
-        if ($class === SessionStorage::class) {
+        if ($class === SessionStorage::class || $class === SessionSessionKeyStorage::class) {
             if (!$this->app->bound(Session::class)) {
-                $this->missingRequiredPackage('storage', SessionStorage::class, 'illuminate/session');
+                $this->missingRequiredPackage('storage', $interface, 'illuminate/session');
             }
 
-            $parameters = ['namespace' => $key];
+            $parameters += ['namespace' => $key];
         }
 
         return $this->getInstance($class, $parameters);

@@ -89,6 +89,12 @@ return [
      *          between steps.
      *          Must implement Lexal\SteppedForm\Form\Storage\StorageInterface
      *      - `storage.parameters` - optional. Describe custom parameters that the storage
+     *          constructor must receive. `sessionStorage` parameter will automatically be added to the array.
+     *          Default: [].
+     *      - `session_storage` - required, array of Session Storage settings or string of class or service alias.
+     *      - `session_storage.class` - required, class or service alias used for storing active session key.
+     *          Must implement Lexal\SteppedForm\Form\Storage\SessionStorageInterface
+     *      - `session_storage.parameters` - optional. Describe custom parameters that the storage
      *          constructor must receive.
      *          Default: [].
      *
@@ -98,6 +104,7 @@ return [
      *          'builder_class' => CustomerFormBuilder::class,
      *          'settings_class' => CustomerFormSettings::class,
      *          'storage' => SessionStorage::class,
+     *          'session_storage' => SessionSessionKeyStorage::class,
      *      ],
      * ],
      */
