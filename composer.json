@@ -21,7 +21,7 @@
         "illuminate/contracts": "^9.0 || ^10.0",
         "illuminate/routing": "^9.0 || ^10.0",
         "illuminate/support": "^9.0 || ^10.0",
-        "lexal/http-stepped-form": "^2.0"
+        "lexal/http-stepped-form": "^2.1"
     },
     "require-dev": {
         "dealerdirect/phpcodesniffer-composer-installer": "^1.0.0",

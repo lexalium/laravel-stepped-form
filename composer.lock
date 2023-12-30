@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "313c10ec3422a5867ba92c14c5c4a6f8",
+    "content-hash": "4707725048272c816deceb8d4438da68",
     "packages": [
         {
             "name": "carbonphp/carbon-doctrine-types",
@@ -935,20 +935,20 @@
         },
         {
             "name": "lexal/http-stepped-form",
-            "version": "v2.0.0",
+            "version": "v2.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/lexalium/http-stepped-form.git",
-                "reference": "72978d82e7bfc96975b542e9b657ca32336f3850"
+                "reference": "ffd99fe600ea71894fd6c77c7852bced0311c9b2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/lexalium/http-stepped-form/zipball/72978d82e7bfc96975b542e9b657ca32336f3850",
-                "reference": "72978d82e7bfc96975b542e9b657ca32336f3850",
+                "url": "https://api.github.com/repos/lexalium/http-stepped-form/zipball/ffd99fe600ea71894fd6c77c7852bced0311c9b2",
+                "reference": "ffd99fe600ea71894fd6c77c7852bced0311c9b2",
                 "shasum": ""
             },
             "require": {
-                "lexal/stepped-form": "^2.0",
+                "lexal/stepped-form": "^2.1",
                 "php": ">=8.1",
                 "symfony/http-foundation": "^5.4 || ^6.4 || ^7.0"
             },
@@ -984,22 +984,22 @@
             ],
             "support": {
                 "issues": "https://github.com/lexalium/http-stepped-form/issues",
-                "source": "https://github.com/lexalium/http-stepped-form/tree/v2.0.0"
+                "source": "https://github.com/lexalium/http-stepped-form/tree/v2.1.0"
             },
-            "time": "2023-12-17T12:10:59+00:00"
+            "time": "2023-12-30T15:06:37+00:00"
         },
         {
             "name": "lexal/stepped-form",
-            "version": "v2.0.0",
+            "version": "v2.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/lexalium/stepped-form.git",
-                "reference": "0241f3abff751a21aebec1555c64cae121a9680d"
+                "reference": "efdafeec97995877050cf9e993b5e73ab147f7f4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/lexalium/stepped-form/zipball/0241f3abff751a21aebec1555c64cae121a9680d",
-                "reference": "0241f3abff751a21aebec1555c64cae121a9680d",
+                "url": "https://api.github.com/repos/lexalium/stepped-form/zipball/efdafeec97995877050cf9e993b5e73ab147f7f4",
+                "reference": "efdafeec97995877050cf9e993b5e73ab147f7f4",
                 "shasum": ""
             },
             "require": {
@@ -1035,9 +1035,9 @@
             ],
             "support": {
                 "issues": "https://github.com/lexalium/stepped-form/issues",
-                "source": "https://github.com/lexalium/stepped-form/tree/v2.0.0"
+                "source": "https://github.com/lexalium/stepped-form/tree/v2.1.0"
             },
-            "time": "2023-12-17T11:20:29+00:00"
+            "time": "2023-12-30T14:44:53+00:00"
         },
         {
             "name": "nesbot/carbon",
