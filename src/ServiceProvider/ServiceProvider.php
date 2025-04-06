@@ -13,6 +13,7 @@ use Lexal\SteppedForm\Form\Builder\StaticStepsFormBuilder;
 use Lexal\SteppedForm\Form\DataControl;
 use Lexal\SteppedForm\Form\StepControl;
 use Lexal\SteppedForm\Form\Storage\DataStorage;
+use Lexal\SteppedForm\Form\Storage\FormStorage;
 use Lexal\SteppedForm\Form\Storage\SessionStorageInterface;
 use Lexal\SteppedForm\Form\Storage\StorageInterface;
 use Lexal\SteppedForm\Step\Builder\StepsBuilder;
@@ -53,7 +54,7 @@ use function sprintf;
 
 final class ServiceProvider extends LaravelServiceProvider
 {
-    private const FORM_KEY_PATTERN = '/^[A-Za-z0-9-]+$/';
+    private const FORM_KEY_PATTERN = '/^[A-Za-z0-9-_]+$/';
 
     private const CONFIG_FILENAME = 'stepped-form.php';
 
@@ -124,7 +125,7 @@ final class ServiceProvider extends LaravelServiceProvider
     private function validateForm(string $key, array $formDefinition): void
     {
         if (!preg_match(self::FORM_KEY_PATTERN, $key)) {
-            throw new BindingResolutionException('Form key must have only "A-z", "0-9" and "-".');
+            throw new BindingResolutionException('Form key must have only "A-z", "0-9", "-" and "_".');
         }
 
         if (!isset($formDefinition['settings_class'], $formDefinition['storage'], $formDefinition['session_storage'])) {
@@ -141,7 +142,7 @@ final class ServiceProvider extends LaravelServiceProvider
         $builderClass = $formDefinition['builder_class'] ?? null;
 
         if ($builderClass !== null && !empty($steps)) {
-            throw new BindingResolutionException('Only "steps" or "builder_class" allowed to be defined.');
+            throw new BindingResolutionException('Only "steps" or "builder_class" are allowed to be defined.');
         }
 
         if ($builderClass === null && empty($steps)) {
@@ -217,20 +218,21 @@ final class ServiceProvider extends LaravelServiceProvider
         $storage = $this->createFormStorage(
             $formDefinition['storage'],
             StorageInterface::class,
-            $parameters + compact('sessionStorage'),
+            $parameters,
         );
 
-        $dataControl = new DataControl(new DataStorage($storage));
-        $stepControl = new StepControl($storage);
+        $formStorage = new FormStorage($storage, $sessionStorage);
+
+        $dataControl = new DataControl(new DataStorage($formStorage));
+        $stepControl = new StepControl($formStorage);
 
         $form = new SteppedForm(
             $dataControl,
             $stepControl,
-            $storage,
+            new FormStorage($storage, $sessionStorage),
             $this->createFormBuilder($formDefinition, $dataControl, $stepControl),
             $this->app->make(EventDispatcherInterface::class),
             $this->app->make(EntityCopyInterface::class),
-            $sessionStorage,
         );
 
         return new HttpSteppedForm(

@@ -2,9 +2,8 @@
 
 [![PHPUnit, PHPCS, PHPStan Tests](https://github.com/lexalium/laravel-stepped-form/actions/workflows/tests.yml/badge.svg)](https://github.com/lexalium/laravel-stepped-form/actions/workflows/tests.yml)
 
-The package is based on the 
-[HTTP Stepped Form](https://github.com/lexalium/http-stepped-form)
-and built for the Laravel & Lumen framework.
+The package is based on the [HTTP Stepped Form](https://github.com/lexalium/http-stepped-form) and built for
+Laravel & Lumen frameworks.
 
 <a id="readme-top" mame="readme-top"></a>
 

@@ -42,7 +42,7 @@ return [
 
     /*
      * --------------------------------------------------------------------------------------
-     * Entity Copy
+     * Entity Copy (@deprecated)
      * --------------------------------------------------------------------------------------
      *
      * Specify Entity Copy class, instance or service alias that will clone entity
