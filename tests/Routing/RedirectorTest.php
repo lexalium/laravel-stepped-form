@@ -37,8 +37,8 @@ final class RedirectorTest extends TestCase
 
         $this->redirector->redirect('test.com/test/url', $errors);
 
-        $this->assertEquals($withErrors, $response->withErrors);
-        $this->assertEquals($withInputs, $response->withInputs);
+        self::assertEquals($withErrors, $response->withErrors);
+        self::assertEquals($withInputs, $response->withInputs);
     }
 
     /**

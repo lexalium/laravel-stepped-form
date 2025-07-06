@@ -37,6 +37,6 @@ final class RendererTest extends TestCase
 
         $actual = $this->renderer->render(new TemplateDefinition('test.template', ['data' => 'hello']));
 
-        $this->assertEquals(new Response('Test content'), $actual);
+        self::assertEquals(new Response('Test content'), $actual);
     }
 }

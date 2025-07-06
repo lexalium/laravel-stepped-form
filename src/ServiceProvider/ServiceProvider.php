@@ -4,17 +4,15 @@ declare(strict_types=1);
 
 namespace Lexal\LaravelSteppedForm\ServiceProvider;
 
-use Illuminate\Contracts\Session\Session;
 use Lexal\HttpSteppedForm\SteppedForm as HttpSteppedForm;
-use Lexal\LaravelSteppedForm\Storage\SessionSessionKeyStorage;
-use Lexal\LaravelSteppedForm\Storage\SessionStorage;
 use Lexal\SteppedForm\Form\Builder\FormBuilderInterface;
 use Lexal\SteppedForm\Form\Builder\StaticStepsFormBuilder;
 use Lexal\SteppedForm\Form\DataControl;
 use Lexal\SteppedForm\Form\StepControl;
 use Lexal\SteppedForm\Form\Storage\DataStorage;
 use Lexal\SteppedForm\Form\Storage\FormStorage;
-use Lexal\SteppedForm\Form\Storage\SessionStorageInterface;
+use Lexal\SteppedForm\Form\Storage\NullSessionKeyStorage;
+use Lexal\SteppedForm\Form\Storage\SessionKeyStorageInterface;
 use Lexal\SteppedForm\Form\Storage\StorageInterface;
 use Lexal\SteppedForm\Step\Builder\StepsBuilder;
 use Lexal\SteppedForm\Step\Builder\StepsBuilderInterface;
@@ -33,15 +31,13 @@ use Lexal\HttpSteppedForm\Settings\FormSettingsInterface;
 use Lexal\LaravelSteppedForm\Event\Dispatcher\EventDispatcher;
 use Lexal\LaravelSteppedForm\Renderer\Renderer;
 use Lexal\LaravelSteppedForm\Routing\Redirector;
-use Lexal\SteppedForm\EntityCopy\EntityCopyInterface;
-use Lexal\SteppedForm\EntityCopy\SimpleEntityCopy;
 use Lexal\SteppedForm\EventDispatcher\EventDispatcherInterface;
 use LogicException;
 use Psr\Container\ContainerExceptionInterface;
 
 use function array_map;
+use function class_exists;
 use function class_implements;
-use function compact;
 use function dirname;
 use function get_class;
 use function get_debug_type;
@@ -52,6 +48,9 @@ use function is_string;
 use function preg_match;
 use function sprintf;
 
+/**
+ * @template TEntity of object
+ */
 final class ServiceProvider extends LaravelServiceProvider
 {
     private const FORM_KEY_PATTERN = '/^[A-Za-z0-9-_]+$/';
@@ -87,7 +86,6 @@ final class ServiceProvider extends LaravelServiceProvider
         $this->registerForms();
         $this->registerRenderer();
         $this->registerRedirector();
-        $this->registerEntityCopy();
         $this->registerEventDispatcher();
         $this->registerExceptionNormalizer();
     }
@@ -113,11 +111,11 @@ final class ServiceProvider extends LaravelServiceProvider
 
     /**
      * @param array{
-     *     builder_class?: string|FormBuilderInterface,
-     *     steps?: array<string, string|StepInterface>,
+     *     builder_class?: string|FormBuilderInterface<TEntity>,
+     *     steps?: array<string, string|StepInterface<TEntity>>,
      *     settings_class?: string|FormSettingsInterface,
      *     storage?: string|object|array{ class?: string|object, parameters?: array<string, mixed> },
-     *     session_storage?: string|object|array{ class?: string|object, parameters?: array<string, mixed> },
+     *     session_key_storage?: string|object|array{ class?: string|object, parameters?: array<string, mixed> },
      *     } $formDefinition
      *
      * @throws BindingResolutionException
@@ -125,14 +123,15 @@ final class ServiceProvider extends LaravelServiceProvider
     private function validateForm(string $key, array $formDefinition): void
     {
         if (!preg_match(self::FORM_KEY_PATTERN, $key)) {
-            throw new BindingResolutionException('Form key must have only "A-z", "0-9", "-" and "_".');
+            throw new BindingResolutionException(
+                sprintf('Form key must have only "A-z", "0-9", "-" and "_". Given: %s.', $key),
+            );
         }
 
-        if (!isset($formDefinition['settings_class'], $formDefinition['storage'], $formDefinition['session_storage'])) {
+        if (!isset($formDefinition['settings_class'], $formDefinition['storage'])) {
             throw new BindingResolutionException(
                 sprintf(
-                    'Form Definition [%s] must have the following required options: '
-                    . 'settings_class, storage, session_storage.',
+                    '[%s] - Form Definition must have the following required options: settings_class, storage.',
                     $key,
                 ),
             );
@@ -142,65 +141,89 @@ final class ServiceProvider extends LaravelServiceProvider
         $builderClass = $formDefinition['builder_class'] ?? null;
 
         if ($builderClass !== null && !empty($steps)) {
-            throw new BindingResolutionException('Only "steps" or "builder_class" are allowed to be defined.');
+            throw new BindingResolutionException(
+                sprintf('[%s] - Only "steps" or "builder_class" is allowed to be defined.', $key),
+            );
         }
 
         if ($builderClass === null && empty($steps)) {
-            throw new BindingResolutionException('"steps" or "builder_class" setting must to be defined.');
+            throw new BindingResolutionException(
+                sprintf('[%s] - "steps" or "builder_class" must to be defined.', $key),
+            );
         }
 
         if ($builderClass !== null) {
-            $this->checkIfClassImplements($key, FormBuilderInterface::class, $builderClass);
+            $this->checkIfFormSettingImplements($key, FormBuilderInterface::class, $builderClass, 'builder_class');
         }
 
-        $this->checkIfClassImplements($key, FormSettingsInterface::class, $formDefinition['settings_class']);
+        $this->checkIfFormSettingImplements(
+            $key,
+            FormSettingsInterface::class,
+            $formDefinition['settings_class'],
+            'settings_class',
+        );
 
-        $this->validateStorage($key, $formDefinition['storage'], StorageInterface::class);
-        $this->validateStorage($key, $formDefinition['session_storage'], SessionStorageInterface::class);
-    }
+        $this->validateStorage($key, StorageInterface::class, $formDefinition['storage'], 'storage');
 
-    /**
-     * @param string|object|array{ class?: string|object, parameters?: array<string, mixed> } $storageClass
-     *
-     * @throws BindingResolutionException
-     */
-    private function validateStorage(string $key, string|object|array $storageClass, string $interface): void
-    {
-        if (is_array($storageClass)) {
-            if (!isset($storageClass['class'])) {
-                throw new BindingResolutionException('"class" option for the storage is required.');
-            }
-
-            $storageClass = $storageClass['class'];
-        }
-
-        $this->checkIfClassImplements($key, $interface, $storageClass);
-    }
-
-    /**
-     * @throws BindingResolutionException
-     */
-    private function checkIfClassImplements(string $key, string $interface, string|object $class): void
-    {
-        if (!in_array($interface, (array)class_implements($class), true)) {
-            throw new BindingResolutionException(
-                sprintf(
-                    'Cannot use %s class as Form Settings for the [%s] form. Class must implement %s interface.',
-                    is_object($class) ? get_class($class) : $class,
-                    $key,
-                    $interface,
-                ),
+        if (isset($formDefinition['session_key_storage'])) {
+            $this->validateStorage(
+                $key,
+                SessionKeyStorageInterface::class,
+                $formDefinition['session_key_storage'],
+                'session_key_storage',
             );
         }
     }
 
     /**
+     * @param string|object|array{ class?: string|object, parameters?: array<string, mixed> } $class
+     *
+     * @throws BindingResolutionException
+     */
+    private function validateStorage(string $key, string $interface, string|object|array $class, string $setting): void
+    {
+        if (is_array($class)) {
+            if (!isset($class['class'])) {
+                throw new BindingResolutionException(
+                    sprintf('[%s] - "class" option for the "%s" is required.', $key, $setting),
+                );
+            }
+
+            $class = $class['class'];
+        }
+
+        $this->checkIfFormSettingImplements($key, $interface, $class, $setting);
+    }
+
+    /**
+     * @throws BindingResolutionException
+     */
+    private function checkIfFormSettingImplements(
+        string $key,
+        string $interface,
+        string|object $class,
+        string $setting,
+    ): void {
+        $this->checkIfClassImplements(
+            $interface,
+            $class,
+            sprintf(
+                '[%s] - Cannot use %s class as "%s". Class must implement %s interface.',
+                $key,
+                is_object($class) ? get_class($class) : $class,
+                $setting,
+                $interface,
+            ),
+        );
+    }
+
+    /**
      * @param array{
-     *     builder_class?: string|FormBuilderInterface,
-     *     steps?: array<string, string|StepInterface>,
+     *     builder_class?: string|FormBuilderInterface<TEntity>,
+     *     steps?: array<string, string|StepInterface<TEntity>>,
      *     settings_class: string|FormSettingsInterface,
      *     storage: string|object|array{ class: string|object, parameters?: array<string, mixed> },
-     *     session_storage: string|object|array{ class: string|object, parameters?: array<string, mixed> },
+     *     session_key_storage?: string|object|array{ class: string|object, parameters?: array<string, mixed> },
      * } $formDefinition
      *
      * @throws BindingResolutionException
@@ -209,19 +232,13 @@ final class ServiceProvider extends LaravelServiceProvider
     {
         $parameters = ['namespace' => $key];
 
-        $sessionStorage = $this->createFormStorage(
-            $formDefinition['session_storage'],
-            SessionStorageInterface::class,
-            $parameters,
+        $formStorage = new FormStorage(
+            $this->createFormStorage($formDefinition['storage'], $parameters),
+            $this->createFormStorage(
+                $formDefinition['session_key_storage'] ?? NullSessionKeyStorage::class,
+                $parameters,
+            ),
         );
-
-        $storage = $this->createFormStorage(
-            $formDefinition['storage'],
-            StorageInterface::class,
-            $parameters,
-        );
-
-        $formStorage = new FormStorage($storage, $sessionStorage);
 
         $dataControl = new DataControl(new DataStorage($formStorage));
         $stepControl = new StepControl($formStorage);
@@ -229,10 +246,8 @@ final class ServiceProvider extends LaravelServiceProvider
         $form = new SteppedForm(
             $dataControl,
             $stepControl,
-            new FormStorage($storage, $sessionStorage),
             $this->createFormBuilder($formDefinition, $dataControl, $stepControl),
             $this->app->make(EventDispatcherInterface::class),
-            $this->app->make(EntityCopyInterface::class),
         );
 
         return new HttpSteppedForm(
@@ -246,9 +261,11 @@ final class ServiceProvider extends LaravelServiceProvider
 
     /**
      * @param array{
-     *     builder_class?: string|FormBuilderInterface,
-     *     steps?: array<string, string|StepInterface>,
+     *     builder_class?: string|FormBuilderInterface<TEntity>,
+     *     steps?: array<string, string|StepInterface<TEntity>>,
      * } $formDefinition
+     *
+     * @return StaticStepsFormBuilder|FormBuilderInterface<TEntity>
      *
      * @throws BindingResolutionException
      */
@@ -268,6 +285,8 @@ final class ServiceProvider extends LaravelServiceProvider
     }
 
     /**
+     * @return FormBuilderInterface<TEntity>
+     *
      * @throws BindingResolutionException
      */
     private function createBuilderFromClass(
@@ -284,11 +303,11 @@ final class ServiceProvider extends LaravelServiceProvider
     }
 
     /**
-     * @param array<string, string|StepInterface> $steps
+     * @param array<string, string|StepInterface<TEntity>> $steps
      *
      * @throws BindingResolutionException
      */
-    private function createBuilderFromSteps(array $steps, StepsBuilder $stepsBuilder): FormBuilderInterface
+    private function createBuilderFromSteps(array $steps, StepsBuilder $stepsBuilder): StaticStepsFormBuilder
     {
         foreach ($steps as $key => $step) {
             $stepsBuilder->add($key, $this->getInstance($step));
@@ -298,30 +317,18 @@ final class ServiceProvider extends LaravelServiceProvider
     }
 
     /**
-     * @template TStorage
-     *
      * @param string|object|array{ class: string|object, parameters?: array<string, mixed> } $definition
-     * @param class-string<TStorage> $interface
      * @param array<string, mixed> $parameters
-     *
-     * @return TStorage
      *
      * @throws BindingResolutionException
      */
-    private function createFormStorage(string|object|array $definition, string $interface, array $parameters): mixed
+    private function createFormStorage(string|object|array $definition, array $parameters): mixed
     {
         $class = $storage = $definition;
 
         if (is_array($storage)) {
             $class = $storage['class'];
             $parameters += $storage['parameters'] ?? [];
-        }
-
-        if (
-            ($class === SessionStorage::class || $class === SessionSessionKeyStorage::class)
-            && !$this->app->bound(Session::class)
-        ) {
-            $this->missingRequiredPackage('storage', $interface, 'illuminate/session');
         }
 
         return $this->getInstance($class, $parameters);
@@ -349,15 +356,6 @@ final class ServiceProvider extends LaravelServiceProvider
     private function registerRedirector(): void
     {
         $this->registerService(RedirectorInterface::class, 'redirector', Redirector::class);
-    }
-
-    /**
-     * @throws ContainerExceptionInterface
-     * @throws BindingResolutionException
-     */
-    private function registerEntityCopy(): void
-    {
-        $this->registerService(EntityCopyInterface::class, 'entity_copy', SimpleEntityCopy::class);
     }
 
     /**
@@ -408,15 +406,15 @@ final class ServiceProvider extends LaravelServiceProvider
     {
         $class = $this->getConfig($configKey, $default);
 
-        if (!in_array($abstract, (array)class_implements($class), true)) {
-            throw new BindingResolutionException(
-                sprintf(
-                    'Unable to register service. Class %s must implement %s interface.',
-                    is_object($class) ? get_class($class) : $class,
-                    $abstract,
-                ),
-            );
-        }
+        $this->checkIfClassImplements(
+            $abstract,
+            $class,
+            sprintf(
+                'Unable to register service. Class %s must implement %s interface.',
+                is_object($class) ? get_class($class) : $class,
+                $abstract,
+            ),
+        );
 
         if ($class instanceof $abstract) {
             $concrete = static fn (): mixed => $class;
@@ -425,6 +423,19 @@ final class ServiceProvider extends LaravelServiceProvider
         }
 
         $this->app->singleton($abstract, $concrete);
+    }
+
+    /**
+     * @throws BindingResolutionException
+     */
+    private function checkIfClassImplements(string $interface, string|object $class, string $message): void
+    {
+        if (
+            ((is_string($class) && class_exists($class)) || is_object($class))
+            && !in_array($interface, (array)class_implements($class), true)
+        ) {
+            throw new BindingResolutionException($message);
+        }
     }
 
     /**
