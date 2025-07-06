@@ -1,6 +1,6 @@
 {
     "name": "lexal/laravel-stepped-form",
-    "description": "Stepped Form for Laravel & Lumen.",
+    "description": "Stepped Form for Laravel.",
     "license": "MIT",
     "authors": [
         {
@@ -10,32 +10,33 @@
     ],
     "keywords": [
         "laravel",
-        "lumen",
         "stepped-form",
         "dynamic stepped-form",
         "multi-step form",
         "multi-step"
     ],
     "require": {
-        "php": ">=8.1",
-        "illuminate/contracts": "^10.0 || ^11.0 || ^12.0",
-        "illuminate/routing": "^10.0 || ^11.0 || ^12.0",
-        "illuminate/support": "^10.0 || ^11.0 || ^12.0",
-        "lexal/http-stepped-form": "^3.0"
+        "php": ">=8.2",
+        "illuminate/contracts": "^11.0 || ^12.0",
+        "illuminate/routing": "^11.0 || ^12.0",
+        "illuminate/support": "^11.0 || ^12.0",
+        "lexal/http-stepped-form": "^4.0"
     },
     "require-dev": {
         "dealerdirect/phpcodesniffer-composer-installer": "^1.0.0",
-        "illuminate/http": "^10.0 || ^11.0 || ^12.0",
+        "illuminate/config": "^11.0 || ^12.0",
+        "illuminate/container": "^11.0 || ^12.0",
+        "illuminate/http": "^11.0 || ^12.0",
+        "infection/infection": "^0.30.1",
         "phpstan/phpstan": "^2.1",
         "phpunit/phpunit": "^10.5",
         "roave/security-advisories": "dev-latest",
         "webimpress/coding-standard": "^1.4"
     },
     "suggest": {
-        "illuminate/events": "Required to use Laravel Dispatcher as form Event Dispatcher (^10.0 || ^11.0 || ^12.0).",
-        "illuminate/view": "Required to render Laravel views (^10.0 || ^11.0 || ^12.0).",
-        "illuminate/session": "Required to use Laravel Session as Stepped Form storage (^10.0 || ^11.0 || ^12.0).",
-        "illuminate/config": "Required to use Laravel config (^10.0 || ^11.0 || ^12.0)."
+        "illuminate/events": "Required to use Laravel Dispatcher as form Event Dispatcher (^11.0 || ^12.0).",
+        "illuminate/view": "Required to render Laravel views (^11.0 || ^12.0).",
+        "illuminate/config": "Required to use Laravel config (^11.0 || ^12.0)."
     },
     "autoload": {
         "psr-4": {
@@ -50,7 +51,8 @@
     "config": {
         "sort-packages": true,
         "allow-plugins": {
-            "dealerdirect/phpcodesniffer-composer-installer": true
+            "dealerdirect/phpcodesniffer-composer-installer": true,
+            "infection/extension-installer": true
         }
     },
     "extra": {
@@ -59,5 +61,17 @@
                 "Lexal\\LaravelSteppedForm\\ServiceProvider\\ServiceProvider"
             ]
         }
+    },
+    "scripts": {
+        "phpunit": "XDEBUG_MODE=coverage phpunit --coverage-text",
+        "phpstan": "phpstan",
+        "phpcs": "phpcs",
+        "infection": "infection -j4 --only-covered --show-mutations",
+        "tests": [
+            "@phpcs",
+            "@phpstan",
+            "@phpunit",
+            "@infection"
+        ]
     }
 }

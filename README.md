@@ -1,9 +1,9 @@
-# Stepped Form for Laravel & Lumen
+# Laravel Stepped Form
 
 [![PHPUnit, PHPCS, PHPStan Tests](https://github.com/lexalium/laravel-stepped-form/actions/workflows/tests.yml/badge.svg)](https://github.com/lexalium/laravel-stepped-form/actions/workflows/tests.yml)
 
 The package is based on the [HTTP Stepped Form](https://github.com/lexalium/http-stepped-form) and built for
-Laravel & Lumen frameworks.
+Laravel framework.
 
 <a id="readme-top" mame="readme-top"></a>
 
@@ -19,9 +19,9 @@ Table of Contents
 
 ## Requirements
 
-**PHP:** >=8.1
+**PHP:** >=8.2
 
-**Laravel:** ^9.0 || ^10.0
+**Laravel:** ^11.0 || ^12.0
 
 ## Installation
 
@@ -55,32 +55,30 @@ php artisan vendor:publish --provider="Lexal\LaravelSteppedForm\ServiceProvider\
 
 The configuration file `config/stepped-form.php` has the following options:
 
-1. `renderer` - contains Renderer class, instance or service alias that will translate step's template definition
-   to the response. Must implement RendererInterface;
-2. `redirector` - contains Redirector class, instance or service alias that will redirect user between different
-   steps. Must implement RedirectorInterface;
-3. `entity_copy` - contains Entity Copy class, instance or service alias that will clone entity of the given step.
-   Must implement EntityCopyInterface;
-4. `event_dispatcher` - contains Event Dispatcher class, instance or service alias that will dispatch form events.
-   Must implement EventDispatcherInterface;
-5. `exception_normalizers` - contains exception normalizers that the form will use to normalize SteppedFormException
+1. `renderer` - contains Renderer class, instance or service alias that translates step's template definition
+   into the response. Must implement `Lexal\HttpSteppedForm\Renderer\RendererInterface`;
+2. `redirector` - contains Redirector class, instance or service alias that redirects user between form
+   steps. Must implement `Lexal\HttpSteppedForm\Routing\RedirectorInterface`;
+3. `event_dispatcher` - contains Event Dispatcher class, instance or service alias that dispatches form events.
+   Must implement `Lexal\SteppedForm\EventDispatcher\EventDispatcherInterface`;
+4. `exception_normalizers` - contains exception normalizers that the form uses for normalizing SteppedFormException
    into the Response instance. Read more about them in the [HTTP Stepped Form](https://github.com/lexalium/http-stepped-form#exception-normalizers)
    docs;
-6. `forms` - contains array of all application forms definitions. Form definition must have builder class
-   for dynamic forms or array of steps for the static forms, settings class and storage where the form will store data.
+5. `forms` - contains array of all application forms definitions. Form definition must have builder class
+   for dynamic forms or array of steps for the static forms, settings class and storage where the form stores its data.
 
 <div style="text-align: right">(<a href="#readme-top">back to top</a>)</div>
 
 ## Usage
 
 1. [Publish configuration file](#publish-the-config).
-2. Replace with custom implementation of redirector, renderer and entity copy if necessary. Add custom exception
-   normalizers if necessary.
-3. Declare your form settings.
+2. Replace redirector, renderer and event dispatcher with your own implementation and add custom exception
+   normalizers, if necessary.
+3. Declare form settings.
    ```php
-    use Lexal\HttpSteppedForm\Settings\FormSettingsInterface;                                                            
+    use Lexal\HttpSteppedForm\Settings\FormSettingsInterface;
     use Lexal\SteppedForm\Step\StepKey;
-    
+
     final class FormSettings implements FormSettingsInterface
     {
         public function getStepUrl(StepKey $key): string
@@ -118,7 +116,7 @@ The configuration file `config/stepped-form.php` has the following options:
                 ],
                 'settings_class' => FormSettings::class,
                 'storage' => SessionStorage::class,
-                'session_storage' => SessionSessionKeyStorage::class,
+                'session_key_storage' => SessionSessionKeyStorage::class,
             ],
         ],
  
@@ -135,7 +133,7 @@ The configuration file `config/stepped-form.php` has the following options:
                 'builder_class' => CustomBuilder::class,
                 'settings_class' => FormSettings::class,
                 'storage' => SessionStorage::class,
-                'session_storage' => SessionSessionKeyStorage::class,
+                'session_key_storage' => SessionSessionKeyStorage::class,
             ],
         ],
  
@@ -143,8 +141,7 @@ The configuration file `config/stepped-form.php` has the following options:
      ];
      ```
 
-5. Use Stepped Form in you controller. Stepped Form will have service alias as "stepped-form." + form key form
-   configuration.
+5. Use Stepped Form in you controller. Stepped Form service is registered under "stepped-form._{{form key}}_" alias in the container.
 
    **ServiceProvider.php**
    ```php
@@ -197,4 +194,4 @@ See configuration file for more information.
 
 ## License
 
-Laravel & Lumen Stepped Form is licensed under the MIT License. See [LICENSE](LICENSE) for the full license text.
+Laravel Stepped Form is licensed under the MIT License. See [LICENSE](LICENSE) for the full license text.

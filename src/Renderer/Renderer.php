@@ -9,9 +9,9 @@ use Lexal\HttpSteppedForm\Renderer\RendererInterface;
 use Lexal\SteppedForm\Step\TemplateDefinition;
 use Symfony\Component\HttpFoundation\Response;
 
-final class Renderer implements RendererInterface
+final readonly class Renderer implements RendererInterface
 {
-    public function __construct(private readonly ViewFactory $view)
+    public function __construct(private ViewFactory $view)
     {
     }
 

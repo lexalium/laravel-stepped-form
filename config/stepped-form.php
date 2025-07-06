@@ -3,15 +3,14 @@
 use Lexal\HttpSteppedForm\ExceptionNormalizer\Normalizers\AlreadyStartedExceptionNormalizer;
 use Lexal\HttpSteppedForm\ExceptionNormalizer\Normalizers\DefaultExceptionNormalizer;
 use Lexal\HttpSteppedForm\ExceptionNormalizer\Normalizers\EntityNotFoundExceptionNormalizer;
-use Lexal\HttpSteppedForm\ExceptionNormalizer\Normalizers\FormIsNotStartedExceptionNormalizer;
-use Lexal\HttpSteppedForm\ExceptionNormalizer\Normalizers\StepIsNotSubmittedExceptionNormalizer;
+use Lexal\HttpSteppedForm\ExceptionNormalizer\Normalizers\FormNotStartedExceptionNormalizer;
 use Lexal\HttpSteppedForm\ExceptionNormalizer\Normalizers\StepNotFoundExceptionNormalizer;
 use Lexal\HttpSteppedForm\ExceptionNormalizer\Normalizers\StepNotRenderableExceptionNormalizer;
+use Lexal\HttpSteppedForm\ExceptionNormalizer\Normalizers\StepNotSubmittedExceptionNormalizer;
 use Lexal\HttpSteppedForm\ExceptionNormalizer\Normalizers\SteppedFormErrorsExceptionNormalizer;
 use Lexal\LaravelSteppedForm\Event\Dispatcher\EventDispatcher;
 use Lexal\LaravelSteppedForm\Renderer\Renderer;
 use Lexal\LaravelSteppedForm\Routing\Redirector;
-use Lexal\SteppedForm\EntityCopy\SimpleEntityCopy;
 
 return [
     /*
@@ -42,19 +41,6 @@ return [
 
     /*
      * --------------------------------------------------------------------------------------
-     * Entity Copy (@deprecated)
-     * --------------------------------------------------------------------------------------
-     *
-     * Specify Entity Copy class, instance or service alias that will clone entity
-     * of the given step.
-     *
-     * Entity Copy must implement Lexal\SteppedForm\EntityCopy\EntityCopyInterface.
-     */
-
-    'entity_copy' => SimpleEntityCopy::class,
-
-    /*
-     * --------------------------------------------------------------------------------------
      * Event Dispatcher
      * --------------------------------------------------------------------------------------
      *
@@ -68,36 +54,34 @@ return [
 
     /*
      * --------------------------------------------------------------------------------------
-     * Forms Definitions
+     * Form Definitions
      * --------------------------------------------------------------------------------------
      *
-     * Associative array of forms definition where key is a part of stepped form service alias,
+     * Associative array of form definitions where key is a part of stepped form service alias,
      * e.g. 'customer' => [...] - will have service alias in container 'stepped-form.customer'.
      * Form Definition has the following fields:
-     *      - `builder_class` - required only when `steps` field is missing, class, instance
-     *          or service alias used for building steps collection. Use this field for
-     *          dynamic forms.
+     *      - `builder_class` - required only when `steps` field is missing, class name, instance
+     *          or service alias can be used as a form builder.
      *          Must implement Lexal\SteppedForm\Form\Builder\FormBuilderInterface.
      *      - `steps` - required only when `builder_class` field is missing, associative array
      *          of stepped-form steps, where `key` is a step key and value is class, instance
-     *          or service alias of StepInterface. Use this field for static forms.
-     *      - `settings_class` - required, class, instance or service alias used for configuring
-     *          stepped form.
+     *          or service alias of StepInterface.
+     *      - `settings_class` - required, class, instance or service alias can be used as a form settings.
      *          Must implement Lexal\HttpSteppedForm\Settings\FormSettingsInterface
      *      - `storage` - required, array of Storage settings or string of class or service alias.
-     *      - `storage.class` - required, class or service alias used for storing form data
-     *          between steps.
+     *      - `storage.class` - required, class or service alias.
      *          Must implement Lexal\SteppedForm\Form\Storage\StorageInterface
-     *      - `storage.parameters` - optional. Describe custom parameters that the storage
-     *          constructor must receive. `namespace` (equals to form key) and `sessionStorage` parameters
-     *          will automatically be added as parameters.
+     *      - `storage.parameters` - optional. Describe custom arguments that the storage
+     *          constructor must receive. `namespace` (equals to a form key) parameter will be added
+     *          as a constructor argument automatically.
      *          Default: [].
-     *      - `session_storage` - required, array of Session Storage settings or string of class or service alias.
-     *      - `session_storage.class` - required, class or service alias used for storing active session key.
+     *      - `session_key_storage` - optional, array of Session Storage settings or string of class or service alias.
+     *          Default: NullSessionKeyStorage::class.
+     *      - `session_key_storage.class` - required, class or service alias.
      *          Must implement Lexal\SteppedForm\Form\Storage\SessionStorageInterface
-     *      - `session_storage.parameters` - optional. Describe custom parameters that the storage
-     *          constructor must receive. `namespace` (equals to form key) parameter will automatically
-     *          be added as parameters.
+     *      - `session_key_storage.parameters` - optional. Describe custom arguments that the storage
+     *          constructor must receive. `namespace` (equals to a form key) parameter will be added
+     *          as a constructor argument automatically.
      *          Default: [].
      *
      * Example:
@@ -106,7 +90,22 @@ return [
      *          'builder_class' => CustomerFormBuilder::class,
      *          'settings_class' => CustomerFormSettings::class,
      *          'storage' => SessionStorage::class,
-     *          'session_storage' => SessionSessionKeyStorage::class,
+     *          'session_key_storage' => SessionSessionKeyStorage::class,
+     *      ],
+     * ],
+     *
+     * or
+     *
+     * 'forms' => [
+     *      'customer' => [
+     *          'steps' => [
+     *              'first' => FirstStep::class,
+     *              'second' => SecondStep::class,
+     *              ...
+     *          ],
+     *          'settings_class' => CustomerFormSettings::class,
+     *          'storage' => SessionStorage::class,
+     *          'session_key_storage' => SessionSessionKeyStorage::class,
      *      ],
      * ],
      */
@@ -126,9 +125,9 @@ return [
         AlreadyStartedExceptionNormalizer::class,
         StepNotFoundExceptionNormalizer::class,
         StepNotRenderableExceptionNormalizer::class,
-        StepIsNotSubmittedExceptionNormalizer::class,
+        StepNotSubmittedExceptionNormalizer::class,
         EntityNotFoundExceptionNormalizer::class,
-        FormIsNotStartedExceptionNormalizer::class,
+        FormNotStartedExceptionNormalizer::class,
         SteppedFormErrorsExceptionNormalizer::class,
         DefaultExceptionNormalizer::class,
     ],

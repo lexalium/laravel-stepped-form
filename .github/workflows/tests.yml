@@ -5,8 +5,6 @@ on:
     paths-ignore:
       - 'docs/**'
   pull_request:
-    paths-ignore:
-      - 'docs/**'
 
 jobs:
   phpunit:
@@ -17,9 +15,9 @@ jobs:
     strategy:
       matrix:
         php-version:
-          - "8.1"
           - "8.2"
           - "8.3"
+          - "8.4"
 
     steps:
       - name: "Checkout repository"
@@ -39,6 +37,29 @@ jobs:
         run: |
           composer update --no-interaction --no-progress
           vendor/bin/phpunit tests/
+
+  infection:
+    name: "Mutation testing"
+
+    runs-on: "ubuntu-latest"
+
+    strategy:
+      matrix:
+        php-version: ["8.2"]
+
+    steps:
+      - name: "Checkout repository"
+        uses: "actions/checkout@v3"
+
+      - name: "Setup Job with PHP version ${{ matrix.php-version }}"
+        uses: "./.github/actions"
+        with:
+          php-version: "${{ matrix.php-version }}"
+
+      - name: "Mutating testing"
+        run: |
+          composer update --no-interaction --no-progress
+          vendor/bin/infection -j4 --only-covered
 
   phpstan:
     name: "PHPStan static code analysis"
