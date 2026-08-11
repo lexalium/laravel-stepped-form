@@ -24,7 +24,6 @@ use Lexal\SteppedForm\Exception\SteppedFormException;
 use Lexal\SteppedForm\Form\Builder\FormBuilderInterface;
 use Lexal\SteppedForm\Form\Storage\SessionKeyStorageInterface;
 use Lexal\SteppedForm\Form\Storage\StorageInterface;
-use Lexal\SteppedForm\Step\Builder\StepsBuilderInterface;
 use Lexal\SteppedForm\Step\Step;
 use Lexal\SteppedForm\Step\StepInterface;
 use Lexal\SteppedForm\Step\StepKey;
